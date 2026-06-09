@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:tnt/Globle/app_const.dart';
+import 'package:tnt/Config/app_config.dart';
 import 'package:tnt/Screens/home.dart';
 import 'package:tnt/Services/auth_service.dart';
 import 'package:tnt/widgets/status_dialog.dart';
@@ -92,7 +92,7 @@ class AuthScreenController extends GetxController {
       if (res['status'] == true) {
         StatusDialog.show(success: true, message: res['message']);
         resetAllControllers();
-        await AppConst.saveUserData(res['user'] as Map<String, dynamic>);
+        await AppSession.save(res['user'] as Map<String, dynamic>);
         Get.offAll(() => Home());
       } else {
         StatusDialog.show(success: false, message: res['message']);

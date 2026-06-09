@@ -1,8 +1,7 @@
-import 'dart:convert';
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
-import 'package:tnt/Globle/app_const.dart';
+import 'package:tnt/Config/app_config.dart';
 import '../Models/profile_model.dart';
+import '../Services/auth_service.dart';
 
 class ProfileViewController extends GetxController {
   var isLoading = true.obs;
@@ -16,39 +15,14 @@ class ProfileViewController extends GetxController {
   }
 
   Future<void> fetchProfile() async {
+    isLoading.value = true;
+    errorMessage.value = '';
     try {
-      isLoading.value = true;
-      errorMessage.value = '';
-
-      var request = http.MultipartRequest(
-        'POST',
-        Uri.parse('https://technewstips.com/api/user/profile'),
-      );
-
-      request.fields.addAll({
-        'email': AppConst.useremail?? "",                  //'cloud@sg.com'
-      });
-
-      var response = await request.send();
-
-      if (response.statusCode == 200) {
-        final respStr = await response.stream.bytesToString();
-        final data = json.decode(respStr);
-
-        if (data['status'] == true && data['user'] != null) {
-          profile.value = ProfileModel.fromJson(data['user']);
-        } else {
-          errorMessage.value = data['message'] ?? 'Unknown error';
-        }
-      } else {
-        errorMessage.value = "Server error: ${response.reasonPhrase}";
-      }
+      profile.value = await AuthService.fetchProfile(AppSession.userId ?? 0);
     } catch (e) {
-      errorMessage.value = "Error: $e";
+      errorMessage.value = e.toString();
     } finally {
       isLoading.value = false;
     }
   }
-
-
 }

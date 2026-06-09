@@ -4,6 +4,7 @@ import 'package:tnt/AppDrawer/drawer_controller.dart';
 import 'package:tnt/Globle/app_const.dart';
 import 'package:tnt/Globle/colors.dart';
 import 'package:tnt/Controllers/all_posts_controller.dart';
+import 'package:tnt/Controllers/favorites_controller.dart';
 import 'package:tnt/Models/post.dart';
 import 'package:tnt/Screens/Posts/post_detail_view.dart';
 import 'package:tnt/widgets/app_loader.dart';
@@ -21,6 +22,7 @@ class AllPostsView extends StatefulWidget {
 class _AllPostsViewState extends State<AllPostsView> {
   late AllPostsController postsController;
   late DrawerControllerX drawerController;
+  late FavoritesController favoritesController;
   late RxString selectedCategoryId;
   late RxString selectedSubCategoryId;
 
@@ -34,6 +36,7 @@ class _AllPostsViewState extends State<AllPostsView> {
       permanent: true,
     );
     drawerController = Get.put(DrawerControllerX());
+    favoritesController = Get.put(FavoritesController(), permanent: true);
 
     selectedCategoryId = (widget.categoryId?.toString() ?? '').obs;
     selectedSubCategoryId = ''.obs;
@@ -293,13 +296,32 @@ class _AllPostsViewState extends State<AllPostsView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    post.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          fontSize: screenWidth * 0.04,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          post.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                                fontSize: screenWidth * 0.04,
+                              ),
                         ),
+                      ),
+                      Obx(() => GestureDetector(
+                            onTap: () => favoritesController.toggleFavorite(post),
+                            child: Icon(
+                              favoritesController.isFavorite(post.id)
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
+                              color: favoritesController.isFavorite(post.id)
+                                  ? Colors.red
+                                  : Colors.grey,
+                              size: screenWidth * 0.055,
+                            ),
+                          )),
+                    ],
                   ),
                   SizedBox(height: screenHeight * 0.01),
                   Row(
@@ -367,6 +389,19 @@ class _AllPostsViewState extends State<AllPostsView> {
                 ],
               ),
             ),
+            SizedBox(width: screenWidth * 0.02),
+            Obx(() => GestureDetector(
+                  onTap: () => favoritesController.toggleFavorite(post),
+                  child: Icon(
+                    favoritesController.isFavorite(post.id)
+                        ? Icons.favorite
+                        : Icons.favorite_border,
+                    color: favoritesController.isFavorite(post.id)
+                        ? Colors.red
+                        : Colors.grey,
+                    size: screenWidth * 0.05,
+                  ),
+                )),
             SizedBox(width: screenWidth * 0.02),
             Icon(Icons.arrow_forward_ios, size: screenWidth * 0.035, color: Colors.grey),
           ],
