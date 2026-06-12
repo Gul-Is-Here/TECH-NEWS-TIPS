@@ -39,7 +39,10 @@ class _PostDetailViewState extends State<PostDetailView> {
   List<Comment> _comments = [];
   bool _commentsLoading = false;
   String _commentsError = '';
+  bool _isSubmittingComment = false;
+  bool _commentHasText = false;
   late final TextEditingController _commentInput;
+  final FocusNode _commentFocus = FocusNode();
 
   @override
   void initState() {
@@ -47,14 +50,23 @@ class _PostDetailViewState extends State<PostDetailView> {
     currentPost = widget.post;
     _headings = extractHeadings(currentPost.content);
     _commentInput = TextEditingController();
+    _commentInput.addListener(_onCommentTextChanged);
+    _commentFocus.addListener(() => setState(() {}));
     allPostController = Get.find<AllPostsController>(tag: widget.tag);
     _loadRelated();
     _fetchComments();
   }
 
+  void _onCommentTextChanged() {
+    final hasText = _commentInput.text.trim().isNotEmpty;
+    if (hasText != _commentHasText) setState(() => _commentHasText = hasText);
+  }
+
   @override
   void dispose() {
+    _commentInput.removeListener(_onCommentTextChanged);
     _commentInput.dispose();
+    _commentFocus.dispose();
     super.dispose();
   }
 
@@ -95,98 +107,99 @@ class _PostDetailViewState extends State<PostDetailView> {
     }
   }
 
-  void _showEditSheet(Comment comment) {
-    final editCtrl = TextEditingController(text: comment.content);
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
-          left: 20,
-          right: 20,
-          top: 20,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.edit_outlined, size: 18, color: blueColor),
-                const SizedBox(width: 8),
-                Text(
-                  'Edit Comment',
-                  style: Theme.of(ctx)
-                      .textTheme
-                      .titleMedium
-                      ?.copyWith(fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: editCtrl,
-              maxLines: 4,
-              autofocus: true,
-              style: Theme.of(ctx).textTheme.bodyMedium,
-              decoration: InputDecoration(
-                hintText: 'Edit your comment…',
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10)),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide:
-                      const BorderSide(color: blueColor, width: 1.5),
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: const Text('Cancel'),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(ctx);
-                    // TODO: await CommentService.editComment(commentId: comment.id, content: editCtrl.text.trim());
-                    Get.snackbar(
-                      'Coming Soon',
-                      'Edit comment API will be connected soon',
-                      snackPosition: SnackPosition.BOTTOM,
-                      margin: const EdgeInsets.all(16),
-                    );
-                  },
-                  icon: const Icon(Icons.check, size: 16),
-                  label: const Text('Save'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: blueColor,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8)),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
-    );
-  }
+  // void _showEditSheet(Comment comment) {
+  //   final editCtrl = TextEditingController(text: comment.content);
+  //   showModalBottomSheet(
+  //     context: context,
+  //     isScrollControlled: true,
+  //     shape: const RoundedRectangleBorder(
+  //       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+  //     ),
+  //     builder: (ctx) => Padding(
+  //       padding: EdgeInsets.only(
+  //         bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
+  //         left: 20,
+  //         right: 20,
+  //         top: 20,
+  //       ),
+  //       child: Column(
+  //         mainAxisSize: MainAxisSize.min,
+  //         crossAxisAlignment: CrossAxisAlignment.start,
+  //         children: [
+  //           Row(
+  //             children: [
+  //               const Icon(Icons.edit_outlined, size: 18, color: blueColor),
+  //               const SizedBox(width: 8),
+  //               Text(
+  //                 'Edit Comment',
+  //                 style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
+  //                   fontWeight: FontWeight.bold,
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //           const SizedBox(height: 16),
+  //           TextField(
+  //             controller: editCtrl,
+  //             maxLines: 4,
+  //             autofocus: true,
+  //             style: Theme.of(ctx).textTheme.bodyMedium,
+  //             decoration: InputDecoration(
+  //               hintText: 'Edit your comment…',
+  //               border: OutlineInputBorder(
+  //                 borderRadius: BorderRadius.circular(10),
+  //               ),
+  //               focusedBorder: OutlineInputBorder(
+  //                 borderRadius: BorderRadius.circular(10),
+  //                 borderSide: const BorderSide(color: blueColor, width: 1.5),
+  //               ),
+  //             ),
+  //           ),
+  //           const SizedBox(height: 14),
+  //           Row(
+  //             mainAxisAlignment: MainAxisAlignment.end,
+  //             children: [
+  //               TextButton(
+  //                 onPressed: () => Navigator.pop(ctx),
+  //                 child: const Text('Cancel'),
+  //               ),
+  //               const SizedBox(width: 8),
+  //               ElevatedButton.icon(
+  //                 onPressed: () {
+  //                   Navigator.pop(ctx);
+  //                   // TODO: await CommentService.editComment(commentId: comment.id, content: editCtrl.text.trim());
+  //                   Get.snackbar(
+  //                     'Coming Soon',
+  //                     'Edit comment API will be connected soon',
+  //                     snackPosition: SnackPosition.BOTTOM,
+  //                     margin: const EdgeInsets.all(16),
+  //                   );
+  //                 },
+  //                 icon: const Icon(Icons.check, size: 16),
+  //                 label: const Text('Save'),
+  //                 style: ElevatedButton.styleFrom(
+  //                   backgroundColor: blueColor,
+  //                   foregroundColor: Colors.white,
+  //                   shape: RoundedRectangleBorder(
+  //                     borderRadius: BorderRadius.circular(8),
+  //                   ),
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //           const SizedBox(height: 8),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 
   // ── Date formatter ─────────────────────────────────────────────────────────
 
   String _formatDate(String raw) {
     try {
-      final dt = DateTime.tryParse(raw) ??
+      final dt =
+          DateTime.tryParse(raw) ??
           DateTime.tryParse(raw.replaceFirst(' ', 'T'));
       if (dt != null) return DateFormat('MMMM d, yyyy').format(dt);
     } catch (_) {}
@@ -201,39 +214,49 @@ class _PostDetailViewState extends State<PostDetailView> {
       appBar: AppBar(title: const Text('Post Details')),
       body: Column(
         children: [
-          // Table of contents
+          // Table of contents — ExcludeFocus prevents it from stealing focus
+          // from the comment input when the keyboard is open.
           if (_headings.isNotEmpty)
-            Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6),
-              child: DropdownButtonFormField<String>(
-                isExpanded: true,
-                decoration: InputDecoration(
-                  labelText: 'Table of Contents',
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8)),
-                  contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 8),
+            ExcludeFocus(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8.0,
+                  vertical: 6,
                 ),
-                items: _headings.map((title) {
-                  return DropdownMenuItem(
-                    value: title,
-                    child: Text(title,
-                        style: Theme.of(context).textTheme.bodyMedium),
-                  );
-                }).toList(),
-                onChanged: (selected) {
-                  if (selected != null) {
-                    final key = _headingKeys[selected];
-                    if (key?.currentContext != null) {
-                      Scrollable.ensureVisible(
-                        key!.currentContext!,
-                        duration: const Duration(milliseconds: 400),
-                        curve: Curves.easeInOut,
-                      );
+                child: DropdownButtonFormField<String>(
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    labelText: 'Table of Contents',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                  ),
+                  items: _headings.map((title) {
+                    return DropdownMenuItem(
+                      value: title,
+                      child: Text(
+                        title,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (selected) {
+                    if (selected != null) {
+                      final key = _headingKeys[selected];
+                      if (key?.currentContext != null) {
+                        Scrollable.ensureVisible(
+                          key!.currentContext!,
+                          duration: const Duration(milliseconds: 400),
+                          curve: Curves.easeInOut,
+                        );
+                      }
                     }
-                  }
-                },
+                  },
+                ),
               ),
             ),
 
@@ -264,30 +287,41 @@ class _PostDetailViewState extends State<PostDetailView> {
                     spacing: 4,
                     children: currentPost.categories
                         .skip(1)
-                        .map((cat) => HtmlWidget(
-                              '$cat ,',
-                              textStyle: const TextStyle(
-                                  color: blackColor, fontSize: 11),
-                            ))
+                        .map(
+                          (cat) => HtmlWidget(
+                            '$cat ,',
+                            textStyle: const TextStyle(
+                              color: blackColor,
+                              fontSize: 11,
+                            ),
+                          ),
+                        )
                         .toList(),
                   ),
                   const SizedBox(height: 8),
 
                   // Title
-                  Text(currentPost.title,
-                      style: Theme.of(context).textTheme.bodyLarge),
+                  Text(
+                    currentPost.title,
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
                   const SizedBox(height: 8),
 
                   // Date
                   Row(
                     children: [
-                      const Icon(Icons.calendar_today,
-                          size: 12, color: Colors.blueGrey),
+                      const Icon(
+                        Icons.calendar_today,
+                        size: 12,
+                        color: Colors.blueGrey,
+                      ),
                       const SizedBox(width: 6),
                       Text(
                         _formatDate(currentPost.date),
                         style: const TextStyle(
-                            fontSize: 10, color: Colors.grey),
+                          fontSize: 10,
+                          color: Colors.grey,
+                        ),
                       ),
                     ],
                   ),
@@ -303,13 +337,13 @@ class _PostDetailViewState extends State<PostDetailView> {
                         _headingKeys[text] = key;
                         return Container(
                           key: key,
-                          padding:
-                              const EdgeInsets.symmetric(vertical: 8),
+                          padding: const EdgeInsets.symmetric(vertical: 8),
                           child: Text(
                             text,
                             style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold),
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         );
                       }
@@ -331,20 +365,18 @@ class _PostDetailViewState extends State<PostDetailView> {
                         children: [
                           TextSpan(
                             text: 'Disclaimer: ',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall!
+                            style: Theme.of(context).textTheme.bodySmall!
                                 .copyWith(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                ),
                           ),
                           TextSpan(
                             text:
                                 'Readers are advised that the material contained herein is solely for information purposes. Readers are encouraged to conduct their own research and due diligence, and/or obtain professional advice. Nothing contained herein constitutes a representation by the publisher, nor a solicitation for the purchase or sale of securities. The information contained herein is based on sources which the publisher believes to be reliable, but is not guaranteed to be accurate, and does not purport to be a complete statement or summary of the available data. Any opinions expressed are subject to change without notice. While the information herein is believed to be accurate and reliable it is not guaranteed or implied to be so. The information herein may not be complete or correct; it is provided in good faith but without any legal responsibility or obligation to provide future updates.',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall!
-                                .copyWith(fontSize: 11),
+                            style: Theme.of(
+                              context,
+                            ).textTheme.bodySmall!.copyWith(fontSize: 11),
                           ),
                         ],
                       ),
@@ -403,15 +435,19 @@ class _PostDetailViewState extends State<PostDetailView> {
                   ? '${_comments.length} Comment${_comments.length == 1 ? '' : 's'}'
                   : 'Comments',
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: lightBlackColor,
-                  ),
+                fontWeight: FontWeight.bold,
+                color: lightBlackColor,
+              ),
             ),
             const Spacer(),
             if (!_commentsLoading)
               GestureDetector(
                 onTap: _fetchComments,
-                child: Icon(Icons.refresh, size: 16, color: Colors.grey.shade400),
+                child: Icon(
+                  Icons.refresh,
+                  size: 16,
+                  color: Colors.grey.shade400,
+                ),
               ),
           ],
         ),
@@ -424,7 +460,10 @@ class _PostDetailViewState extends State<PostDetailView> {
           const Center(
             child: Padding(
               padding: EdgeInsets.symmetric(vertical: 28),
-              child: CircularProgressIndicator(strokeWidth: 2, color: blueColor),
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: blueColor,
+              ),
             ),
           )
         else if (_commentsError.isNotEmpty)
@@ -433,15 +472,17 @@ class _PostDetailViewState extends State<PostDetailView> {
               padding: const EdgeInsets.symmetric(vertical: 20),
               child: Column(
                 children: [
-                  Icon(Icons.wifi_off_outlined,
-                      size: 36, color: Colors.grey.shade300),
+                  Icon(
+                    Icons.wifi_off_outlined,
+                    size: 36,
+                    color: Colors.grey.shade300,
+                  ),
                   const SizedBox(height: 8),
                   Text(
                     _commentsError,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodySmall
-                        ?.copyWith(color: Colors.grey),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: Colors.grey),
                   ),
                   TextButton.icon(
                     onPressed: _fetchComments,
@@ -458,15 +499,17 @@ class _PostDetailViewState extends State<PostDetailView> {
               padding: const EdgeInsets.symmetric(vertical: 24),
               child: Column(
                 children: [
-                  Icon(Icons.chat_bubble_outline,
-                      size: 36, color: Colors.grey.shade300),
+                  Icon(
+                    Icons.chat_bubble_outline,
+                    size: 36,
+                    color: Colors.grey.shade300,
+                  ),
                   const SizedBox(height: 10),
                   Text(
                     'No comments yet — be the first!',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodySmall
-                        ?.copyWith(color: Colors.grey.shade400),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.grey.shade400,
+                    ),
                   ),
                 ],
               ),
@@ -483,9 +526,9 @@ class _PostDetailViewState extends State<PostDetailView> {
   }
 
   Widget _buildCommentCard(BuildContext context, Comment comment) {
-    final initial =
-        comment.author.isNotEmpty ? comment.author[0].toUpperCase() : '?';
-    final isOwn = comment.userId == AppSession.userId;
+    final initial = comment.author.isNotEmpty
+        ? comment.author[0].toUpperCase()
+        : '?';
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -499,9 +542,10 @@ class _PostDetailViewState extends State<PostDetailView> {
             child: Text(
               initial,
               style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold),
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           const SizedBox(width: 10),
@@ -536,9 +580,7 @@ class _PostDetailViewState extends State<PostDetailView> {
                               children: [
                                 Text(
                                   comment.author,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall
+                                  style: Theme.of(context).textTheme.bodySmall
                                       ?.copyWith(
                                         fontWeight: FontWeight.w700,
                                         color: Colors.black87,
@@ -547,9 +589,7 @@ class _PostDetailViewState extends State<PostDetailView> {
                                 const SizedBox(height: 2),
                                 Text(
                                   _formatDate(comment.date),
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall
+                                  style: Theme.of(context).textTheme.bodySmall
                                       ?.copyWith(
                                         fontSize: 10,
                                         color: Colors.grey.shade500,
@@ -558,15 +598,18 @@ class _PostDetailViewState extends State<PostDetailView> {
                               ],
                             ),
                           ),
-                          if (isOwn)
-                            GestureDetector(
-                              onTap: () => _showEditSheet(comment),
-                              child: Padding(
-                                padding: const EdgeInsets.only(left: 8),
-                                child: Icon(Icons.more_horiz,
-                                    size: 18, color: Colors.grey.shade500),
-                              ),
-                            ),
+                          // if (isOwn)
+                          //   GestureDetector(
+                          //     onTap: () => _showEditSheet(comment),
+                          //     child: Padding(
+                          //       padding: const EdgeInsets.only(left: 8),
+                          //       child: Icon(
+                          //         Icons.more_horiz,
+                          //         size: 18,
+                          //         color: Colors.grey.shade500,
+                          //       ),
+                          //     ),
+                          //   ),
                         ],
                       ),
                       const SizedBox(height: 8),
@@ -574,9 +617,9 @@ class _PostDetailViewState extends State<PostDetailView> {
                       Text(
                         comment.content,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.black87,
-                              height: 1.5,
-                            ),
+                          color: Colors.black87,
+                          height: 1.5,
+                        ),
                       ),
                     ],
                   ),
@@ -586,33 +629,37 @@ class _PostDetailViewState extends State<PostDetailView> {
                 const SizedBox(height: 6),
                 Row(
                   children: [
-                    _CommentAction(
-                      icon: Icons.thumb_up_outlined,
-                      label: 'Like',
-                      onTap: () => Get.snackbar(
-                        'Coming Soon',
-                        'Like feature will be connected soon',
-                        snackPosition: SnackPosition.BOTTOM,
-                        margin: const EdgeInsets.all(16),
-                        duration: const Duration(seconds: 2),
+                    // _CommentAction(
+                    //   icon: Icons.thumb_up_outlined,
+                    //   label: 'Like',
+                    //   onTap: () => Get.snackbar(
+                    //     'Coming Soon',
+                    //     'Like feature will be connected soon',
+                    //     snackPosition: SnackPosition.BOTTOM,
+                    //     margin: const EdgeInsets.all(16),
+                    //     duration: const Duration(seconds: 2),
+                    //   ),
+                    // ),
+                    const SizedBox(width: 2),
+                    Text(
+                      '·',
+                      style: TextStyle(
+                        color: Colors.grey.shade400,
+                        fontSize: 12,
                       ),
                     ),
                     const SizedBox(width: 2),
-                    Text('·',
-                        style: TextStyle(
-                            color: Colors.grey.shade400, fontSize: 12)),
-                    const SizedBox(width: 2),
-                    _CommentAction(
-                      icon: Icons.reply_outlined,
-                      label: 'Reply',
-                      onTap: () => Get.snackbar(
-                        'Coming Soon',
-                        'Reply feature will be connected soon',
-                        snackPosition: SnackPosition.BOTTOM,
-                        margin: const EdgeInsets.all(16),
-                        duration: const Duration(seconds: 2),
-                      ),
-                    ),
+                    // _CommentAction(
+                    //   icon: Icons.reply_outlined,
+                    //   label: 'Reply',
+                    //   onTap: () => Get.snackbar(
+                    //     'Coming Soon',
+                    //     'Reply feature will be connected soon',
+                    //     snackPosition: SnackPosition.BOTTOM,
+                    //     margin: const EdgeInsets.all(16),
+                    //     duration: const Duration(seconds: 2),
+                    //   ),
+                    // ),
                   ],
                 ),
               ],
@@ -623,85 +670,96 @@ class _PostDetailViewState extends State<PostDetailView> {
     );
   }
 
-  // ── Comment input bar (sticky — LinkedIn style) ───────────────────────────
+  // ── Comment input bar (sticky) ────────────────────────────────────────────
 
   Widget _buildCommentInput(BuildContext context) {
     return Container(
-      padding: EdgeInsets.only(
-        left: 12,
-        right: 12,
-        top: 8,
-        bottom: MediaQuery.of(context).padding.bottom + 8,
+      padding: EdgeInsets.fromLTRB(
+        14,
+        10,
+        14,
+        MediaQuery.of(context).padding.bottom + 10,
       ),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey.shade200)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 6,
-            offset: const Offset(0, -2),
+            color: Colors.black.withValues(alpha: 0.07),
+            blurRadius: 14,
+            offset: const Offset(0, -3),
           ),
         ],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          // User avatar
-          Padding(
-            padding: const EdgeInsets.only(bottom: 6),
-            child: CircleAvatar(
-              radius: 17,
-              backgroundColor: blueColor.withValues(alpha: 0.12),
-              child: const Icon(Icons.person, size: 18, color: blueColor),
-            ),
-          ),
-          const SizedBox(width: 10),
+          // ── User avatar ──────────────────────────────────────────────────
 
-          // Input pill — send arrow lives inside
+          // ── Input container ───────────────────────────────────────────────
           Expanded(
-            child: Container(
-              constraints: const BoxConstraints(maxHeight: 110),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(22),
-                border: Border.all(color: Colors.grey.shade300),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _commentInput,
-                      maxLines: null,
-                      textInputAction: TextInputAction.newline,
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodySmall
-                          ?.copyWith(color: Colors.black87),
-                      decoration: InputDecoration(
-                        hintText: 'Add a comment…',
-                        hintStyle: TextStyle(
-                            color: Colors.grey.shade400, fontSize: 12),
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 10),
-                        border: InputBorder.none,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                // Text field
+                Expanded(
+                  child: TextField(
+                    controller: _commentInput,
+                    focusNode: _commentFocus,
+                    maxLines: null,
+                    textInputAction: TextInputAction.newline,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.black87,
+                      fontSize: 13,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'Add a comment…',
+                      hintStyle: TextStyle(
+                        color: Colors.grey.shade400,
+                        fontSize: 12,
                       ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      border: InputBorder.none,
+                      isDense: true,
                     ),
                   ),
-                  GestureDetector(
-                    onTap: _submitComment,
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: 8, bottom: 8),
-                      child: Icon(
-                        Icons.send_rounded,
-                        size: 20,
-                        color: blueColor.withValues(alpha: 0.8),
-                      ),
+                ),
+                (const SizedBox(width: 6)),
+
+                // Send button — grey when empty, blue when ready
+                Padding(
+                  padding: const EdgeInsets.only(right: 6, bottom: 0),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _commentHasText ? blueColor : Colors.grey.shade200,
                     ),
+                    child: _isSubmittingComment
+                        ? const Padding(
+                            padding: EdgeInsets.all(9),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : GestureDetector(
+                            onTap: _commentHasText ? _submitComment : null,
+                            child: Icon(
+                              Icons.send_rounded,
+                              size: 16,
+                              color: _commentHasText
+                                  ? Colors.white
+                                  : Colors.grey.shade400,
+                            ),
+                          ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ],
@@ -709,19 +767,34 @@ class _PostDetailViewState extends State<PostDetailView> {
     );
   }
 
-  void _submitComment() {
+  Future<void> _submitComment() async {
     final text = _commentInput.text.trim();
-    if (text.isEmpty) return;
-    // TODO: await CommentService.addComment(postId: currentPost.id, userId: AppSession.userId!, content: text);
+    if (text.isEmpty || _isSubmittingComment) return;
+
     _commentInput.clear();
     FocusScope.of(context).unfocus();
-    Get.snackbar(
-      'Coming Soon',
-      'Add comment API will be connected soon',
-      snackPosition: SnackPosition.BOTTOM,
-      margin: const EdgeInsets.all(16),
-      duration: const Duration(seconds: 2),
-    );
+    setState(() => _isSubmittingComment = true);
+
+    try {
+      final newComment = await CommentService.addComment(
+        postId: currentPost.id,
+        userId: AppSession.userId ?? 0,
+        content: text,
+      );
+      setState(() => _comments.add(newComment));
+    } catch (_) {
+      Get.snackbar(
+        'Error',
+        'Failed to post comment. Please try again.',
+        snackPosition: SnackPosition.BOTTOM,
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 3),
+        backgroundColor: Colors.red.shade400,
+        colorText: Colors.white,
+      );
+    } finally {
+      setState(() => _isSubmittingComment = false);
+    }
   }
 
   // ── Shared latest/related block ────────────────────────────────────────────
@@ -745,9 +818,9 @@ class _PostDetailViewState extends State<PostDetailView> {
             child: Text(
               title,
               style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           const SizedBox(height: 16),
@@ -787,7 +860,9 @@ class _PostDetailViewState extends State<PostDetailView> {
                             Text(
                               _formatDate(post.date),
                               style: const TextStyle(
-                                  color: Colors.white70, fontSize: 12),
+                                color: Colors.white70,
+                                fontSize: 12,
+                              ),
                             ),
                           ],
                         ),
@@ -823,46 +898,43 @@ class _PostDetailViewState extends State<PostDetailView> {
 /// Extract all h2 headings from HTML content.
 List<String> extractHeadings(String htmlContent) {
   final doc = html_parser.parse(htmlContent);
-  return doc
-      .getElementsByTagName('h2')
-      .map((e) => e.text.trim())
-      .toList();
+  return doc.getElementsByTagName('h2').map((e) => e.text.trim()).toList();
 }
 
 // ── Reusable Like / Reply action button ───────────────────────────────────────
 
-class _CommentAction extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
+// class _CommentAction extends StatelessWidget {
+//   final IconData icon;
+//   final String label;
+//   final VoidCallback onTap;
 
-  const _CommentAction({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
+//   const _CommentAction({
+//     required this.icon,
+//     required this.label,
+//     required this.onTap,
+//   });
 
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-        child: Row(
-          children: [
-            Icon(icon, size: 13, color: Colors.grey.shade500),
-            const SizedBox(width: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                color: Colors.grey.shade500,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return GestureDetector(
+//       onTap: onTap,
+//       child: Padding(
+//         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+//         child: Row(
+//           children: [
+//             // Icon(icon, size: 13, color: Colors.grey.shade500),
+//             const SizedBox(width: 4),
+//             Text(
+//               label,
+//               style: TextStyle(
+//                 fontSize: 11,
+//                 color: Colors.grey.shade500,
+//                 fontWeight: FontWeight.w500,
+//               ),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }

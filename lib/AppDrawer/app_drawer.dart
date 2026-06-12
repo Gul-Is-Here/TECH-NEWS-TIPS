@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tnt/Screens/AboutUs/about_us.dart';
-import 'package:tnt/Controllers/all_posts_controller.dart';
+import 'package:tnt/Screens/ContactUs/contact_us_view.dart';
 import 'package:tnt/Screens/Posts/all_posts_view.dart';
 import 'package:tnt/widgets/app_loader.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -33,25 +33,21 @@ class AppDrawer extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
 
-                  // Row of 4 circle buttons
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    spacing: 10,
-                    children: [
-                      _buildCircleIcon("assets/images/Facebook.png", () {
-                        _launchUrl(Uri.parse('https://www.facebook.com'));
-                      }),
-                      _buildCircleIcon("assets/images/Twitter.png", () {
-                        _launchUrl(Uri.parse('https://www.twitter.com'));
-                      }),
-                      _buildCircleIcon("assets/images/Linkedin.png", () {
-                        _launchUrl(Uri.parse('https://www.linkedin.com'));
-                      }),
-                      _buildCircleIcon("assets/images/Readit.png",  () {
-                        _launchUrl(Uri.parse('https://www.reddit.com'));
-                      }),
-                    ],
-                  ),
+                  // Social media links — loaded from API
+                  Obx(() {
+                    final links = controller.socialMediaLinks;
+                    if (links.isEmpty) return const SizedBox.shrink();
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      spacing: 10,
+                      children: links.map((sm) {
+                        return _buildCircleIcon(
+                          _iconForPlatform(sm.platformName),
+                          () => _launchUrl(Uri.parse(sm.link)),
+                        );
+                      }).toList(),
+                    );
+                  }),
                 ],
               ),
             ),
@@ -75,8 +71,6 @@ class AppDrawer extends StatelessWidget {
                   itemBuilder: (context, index) {
                     final category = controller.categories[index + 1];
                     final isExpanded = controller.expandedIndex.value == index;
-                    final subs =
-                        controller.subCategories[category.id] ?? <dynamic>[];
 
                     return ExpansionTile(
                       key: Key(category.id),
@@ -144,14 +138,20 @@ class AppDrawer extends StatelessWidget {
                 );
               }),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              child: TextButton(
-                onPressed: (){
-                  Get.to(()=> AboutUs());
-                },
-                child: Text('About Us'),
-              ),
+            const Divider(height: 1),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                TextButton(
+                  onPressed: () => Get.to(() => AboutUs()),
+                  child: const Text('About Us'),
+                ),
+                Container(width: 1, height: 20, color: Colors.grey.shade300),
+                TextButton(
+                  onPressed: () => Get.to(() => const ContactUsView()),
+                  child: const Text('Contact Us'),
+                ),
+              ],
             )
           ],
         ),
@@ -165,6 +165,14 @@ Future<void> _launchUrl(Uri url) async {
     throw Exception('Could not launch $url');
   }
 }
+
+  String _iconForPlatform(String name) {
+    final lower = name.toLowerCase();
+    if (lower.contains('facebook')) return 'assets/images/Facebook.png';
+    if (lower.contains('twitter') || lower.contains('x ')) return 'assets/images/Twitter.png';
+    if (lower.contains('linkedin')) return 'assets/images/Linkedin.png';
+    return 'assets/images/Readit.png';
+  }
 
   // 🔹 Reusable circle icon button
   Widget _buildCircleIcon(String imagePath, VoidCallback onTap) {

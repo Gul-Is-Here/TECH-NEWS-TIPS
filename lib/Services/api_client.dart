@@ -17,10 +17,9 @@ class ApiClient {
     String path,
     Map<String, String> body,
   ) async {
-    final response = await http.post(
-      Uri.parse('$kBaseUrl$path'),
-      body: body,
-    );
+    final response = await http
+        .post(Uri.parse('$kBaseUrl$path'), body: body)
+        .timeout(const Duration(seconds: 20));
     if (response.statusCode == 200 || response.statusCode == 201) {
       return jsonDecode(response.body) as Map<String, dynamic>;
     }
@@ -36,7 +35,9 @@ class ApiClient {
   }) async {
     final uri = Uri.parse('$kBaseUrl$path')
         .replace(queryParameters: queryParams);
-    final response = await http.get(uri);
+    final response = await http
+        .get(uri)
+        .timeout(const Duration(seconds: 20));
     if (response.statusCode == 200) {
       return jsonDecode(response.body) as Map<String, dynamic>;
     }
@@ -58,7 +59,7 @@ class ApiClient {
     for (final f in files) {
       request.files.add(await http.MultipartFile.fromPath(f.field, f.path));
     }
-    final streamed = await request.send();
+    final streamed = await request.send().timeout(const Duration(seconds: 20));
     final body = await streamed.stream.bytesToString();
     if (streamed.statusCode == 200 || streamed.statusCode == 201) {
       return jsonDecode(body) as Map<String, dynamic>;
@@ -69,7 +70,9 @@ class ApiClient {
   /// GET request — returns the decoded JSON list.
   /// Throws [Exception] on non-200 status codes.
   static Future<List<dynamic>> getList(String path) async {
-    final response = await http.get(Uri.parse('$kBaseUrl$path'));
+    final response = await http
+        .get(Uri.parse('$kBaseUrl$path'))
+        .timeout(const Duration(seconds: 20));
     if (response.statusCode == 200) {
       return jsonDecode(response.body) as List<dynamic>;
     }

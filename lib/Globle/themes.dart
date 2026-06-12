@@ -9,8 +9,6 @@ class Themes {
     colorScheme: ColorScheme.fromSeed(
       seedColor: blueColor,
       primary: blueColor,
-     
-      background: greyColor,
       surface: whiteColor,
     ),
     useMaterial3: true,
@@ -98,8 +96,7 @@ class Themes {
       seedColor: blueColor,
       primary: blueColor,
       secondary: blueColor,
-      background: blackColor,
-      surface: const Color(0xFF1E1E1E), // Dark surface
+      surface: const Color(0xFF1E1E1E),
       brightness: Brightness.dark,
     ),
     useMaterial3: true,

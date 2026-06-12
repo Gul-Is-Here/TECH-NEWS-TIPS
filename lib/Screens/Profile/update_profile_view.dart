@@ -24,8 +24,8 @@ class UpdateProfileView extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // ── Cover + Avatar picker ────────────────────────────────────────
-            _CoverAvatarPicker(controller: controller, profile: profile),
+            // ── Avatar picker ────────────────────────────────────────────────
+            _AvatarPicker(controller: controller, profile: profile),
 
             // ── Form fields ─────────────────────────────────────────────────
             Padding(
@@ -65,148 +65,73 @@ class UpdateProfileView extends StatelessWidget {
   }
 }
 
-// ── Cover + Avatar picker widget ─────────────────────────────────────────────
+// ── Avatar-only picker ────────────────────────────────────────────────────────
 
-class _CoverAvatarPicker extends StatelessWidget {
+class _AvatarPicker extends StatelessWidget {
   final UpdateProfileController controller;
   final dynamic profile; // ProfileModel
 
-  const _CoverAvatarPicker({required this.controller, required this.profile});
+  const _AvatarPicker({required this.controller, required this.profile});
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 190,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          // Cover photo
-          Obx(() {
-            final localPath = controller.coverFilePath.value;
-            return GestureDetector(
-              onTap: controller.pickCover,
-              child: Container(
-                width: double.infinity,
-                height: 150,
+    return Padding(
+      padding: const EdgeInsets.only(top: 28, bottom: 8),
+      child: Center(
+        child: Stack(
+          children: [
+            Obx(() {
+              final localPath = controller.avatarFilePath.value;
+              return Container(
                 decoration: BoxDecoration(
-                  color: blueColor.withValues(alpha: 0.15),
-                  image: localPath != null
-                      ? DecorationImage(
-                          image: FileImage(File(localPath)),
-                          fit: BoxFit.cover,
-                        )
-                      : (profile?.coverUrl != null &&
-                              profile!.coverUrl!.isNotEmpty)
-                          ? DecorationImage(
-                              image: NetworkImage(profile!.coverUrl!),
-                              fit: BoxFit.cover,
-                            )
-                          : null,
-                ),
-                child: localPath == null &&
-                        (profile?.coverUrl == null ||
-                            profile!.coverUrl!.isEmpty)
-                    ? Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.add_photo_alternate_outlined,
-                                size: 32, color: blueColor.withValues(alpha: 0.6)),
-                            const SizedBox(height: 4),
-                            Text('Add Cover Photo',
-                                style: TextStyle(
-                                    color: blueColor.withValues(alpha: 0.6),
-                                    fontSize: 12)),
-                          ],
-                        ),
-                      )
-                    : null,
-              ),
-            );
-          }),
-
-          // Camera icon on cover (bottom-right)
-          Positioned(
-            bottom: 48,
-            right: 12,
-            child: GestureDetector(
-              onTap: controller.pickCover,
-              child: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: blueColor,
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2),
-                ),
-                child: const Icon(Icons.camera_alt, color: Colors.white, size: 14),
-              ),
-            ),
-          ),
-
-          // Avatar circle (overlapping cover)
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Stack(
-                children: [
-                  Obx(() {
-                    final localPath = controller.avatarFilePath.value;
-                    return Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 3),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.12),
-                            blurRadius: 8,
-                          )
-                        ],
-                      ),
-                      child: CircleAvatar(
-                        radius: 42,
-                        backgroundColor: Colors.grey.shade200,
-                        backgroundImage: localPath != null
-                            ? FileImage(File(localPath))
-                            : (profile?.avatarUrl != null &&
-                                    profile!.avatarUrl.isNotEmpty)
-                                ? NetworkImage(profile!.avatarUrl)
-                                    as ImageProvider
-                                : null,
-                        child: (localPath == null &&
-                                (profile?.avatarUrl == null ||
-                                    profile!.avatarUrl.isEmpty))
-                            ? const Icon(Icons.person,
-                                size: 40, color: Colors.grey)
-                            : null,
-                      ),
-                    );
-                  }),
-
-                  // Camera icon on avatar (bottom-right)
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: GestureDetector(
-                      onTap: controller.pickAvatar,
-                      child: Container(
-                        padding: const EdgeInsets.all(5),
-                        decoration: BoxDecoration(
-                          color: blueColor,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
-                        ),
-                        child: const Icon(Icons.camera_alt,
-                            color: Colors.white, size: 12),
-                      ),
+                  border: Border.all(color: Colors.white, width: 3),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.12),
+                      blurRadius: 10,
+                      spreadRadius: 1,
                     ),
+                  ],
+                ),
+                child: CircleAvatar(
+                  radius: 52,
+                  backgroundColor: Colors.grey.shade200,
+                  backgroundImage: localPath != null
+                      ? FileImage(File(localPath))
+                      : (profile?.avatarUrl != null &&
+                              profile!.avatarUrl.isNotEmpty)
+                          ? NetworkImage(profile!.avatarUrl) as ImageProvider
+                          : null,
+                  child: (localPath == null &&
+                          (profile?.avatarUrl == null ||
+                              profile!.avatarUrl.isEmpty))
+                      ? const Icon(Icons.person, size: 48, color: Colors.grey)
+                      : null,
+                ),
+              );
+            }),
+
+            // Camera badge
+            Positioned(
+              bottom: 2,
+              right: 2,
+              child: GestureDetector(
+                onTap: controller.pickAvatar,
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: blueColor,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
                   ),
-                ],
+                  child: const Icon(Icons.camera_alt,
+                      color: Colors.white, size: 14),
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
